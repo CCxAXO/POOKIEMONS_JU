@@ -7,9 +7,35 @@ from iot_simulator import IoTSimulator
 from wallet import WalletManager
 from auth import AuthManager
 from web_app import app, init_app
+from token_storage import TokenStorage
+import atexit  # ⭐ ADD THIS
+import signal  # ⭐ ADD THIS
+import sys     # ⭐ ADD THIS
 
-def setup_demo_data(blockchain, validator, emission_tracker, auth_manager, wallet_manager):
+# Global variable to store tokens and storage
+token_storage = None
+registered_tokens = {}  # Store tokens here instead of blockchain
+
+def save_on_exit():
+    """Save token data when server stops"""
+    global token_storage, registered_tokens
+    
+    if token_storage and registered_tokens:
+        print("\n💾 Saving token data before shutdown...")
+        try:
+            token_storage.save(registered_tokens)
+            print("✓ Token data saved successfully")
+        except Exception as e:
+            print(f"❌ Error saving tokens: {e}")
+
+def signal_handler(sig, frame):
+    """Handle Ctrl+C gracefully"""
+    save_on_exit()
+    sys.exit(0)
+
+def setup_demo_data(blockchain, validator, emission_tracker, storage):
     """Setup demo companies and tokens"""
+    global registered_tokens
     
     demo_companies = [
         {
@@ -52,105 +78,159 @@ def setup_demo_data(blockchain, validator, emission_tracker, auth_manager, walle
     
     iot_configs = []
     
+    print(f"\n{'='*60}")
+    print("📝 Setting up demo companies...")
+    print(f"{'='*60}")
+    
     for company in demo_companies:
-        app_id = validator.submit_application(company)
-        validator.auto_validate_demo(app_id)
+        symbol = company['symbol']
         
-        token = CompanyToken(
-            company_name=company['company_name'],
-            symbol=company['symbol'],
-            initial_supply=company['initial_supply'],
-            emission_baseline=company['emission_baseline'],
-            industry_type=company['industry_type'],
-            company_scale=company['company_scale']
-        )
-        token.is_verified = True
-        token.owner_address = f"WALLET_{company['symbol']}"
+        # Check if token already exists in storage
+        saved_data = storage.get_token_data(symbol)
+        
+        if saved_data:
+            print(f"\n✓ {company['company_name']} ({symbol})")
+            print(f"  Loading from saved data...")
+            token = CompanyToken(
+                company_name=company['company_name'],
+                symbol=symbol,
+                initial_supply=company['initial_supply'],
+                emission_baseline=company['emission_baseline'],
+                industry_type=company['industry_type'],
+                company_scale=company['company_scale'],
+                saved_data=saved_data  # Load from saved data
+            )
+            print(f"  Price: ${token.price:.2f} | Candles: {len(token.candlestick_data)}")
+        else:
+            print(f"\n✓ {company['company_name']} ({symbol})")
+            print(f"  Creating new token with historical data...")
+            
+            app_id = validator.submit_application(company)
+            validator.auto_validate_demo(app_id)
+            
+            token = CompanyToken(
+                company_name=company['company_name'],
+                symbol=symbol,
+                initial_supply=company['initial_supply'],
+                emission_baseline=company['emission_baseline'],
+                industry_type=company['industry_type'],
+                company_scale=company['company_scale']
+            )
+            token.is_verified = True
+            token.owner_address = f"WALLET_{symbol}"
+            token.mint(company['initial_supply'] * 0.3, token.owner_address, blockchain)
+            
+            print(f"  Price: ${token.price:.2f} | Candles: {len(token.candlestick_data)}")
         
         blockchain.register_token(token)
-        token.mint(company['initial_supply'] * 0.3, token.owner_address, blockchain)
+        registered_tokens[symbol] = token  # Store in global dict
         
-        device_id = f"IOT_{company['symbol']}_001"
+        device_id = f"IOT_{symbol}_001"
         emission_tracker.register_iot_device(
-            company['symbol'],
+            symbol,
             device_id,
             "CO2_SENSOR",
             company['location']
         )
         
-        # Create company owner account
-        auth_manager.create_user(
-            f"owner_{company['symbol'].lower()}",
-            "owner123",
-            "company_owner",
-            company['symbol']
-        )
-        
         iot_configs.append({
-            'symbol': company['symbol'],
+            'symbol': symbol,
             'device_id': device_id,
             'baseline': company['emission_baseline'],
             'variance': 0.15
         })
     
-    blockchain.mine_pending_transactions('GENESIS')
-    print(f"\n✓ Setup complete: {len(demo_companies)} companies registered")
+    # Save all tokens immediately after setup
+    storage.save(registered_tokens)
     
-    # Create demo trader
-    auth_manager.create_user('trader1', 'trader123', 'trader')
-    wallet_manager.create_wallet('trader1', 10000.0)
+    blockchain.mine_pending_transactions('GENESIS')
+    
+    print(f"\n{'='*60}")
+    print(f"✓ Setup complete: {len(demo_companies)} companies registered")
+    print(f"{'='*60}")
+    
+    # Check if prices should update
+    if storage.should_update_prices():
+        print("\n⏰ 24 hours passed - prices will update on next cycle")
+    else:
+        from datetime import datetime, timedelta
+        last_update = datetime.fromtimestamp(storage.get_last_update_time())
+        next_update = last_update + timedelta(days=1)
+        print(f"⏰ Next price update: {next_update.strftime('%Y-%m-%d %H:%M:%S')}")
     
     return iot_configs
 
 def main():
+    global token_storage, registered_tokens
+    
+    # Register exit handlers
+    atexit.register(save_on_exit)
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
     print("=" * 60)
     print("🌍 CarbonCoin Trading Platform - Initializing...")
     print("=" * 60)
     
-    # Initialize components
-    blockchain = CarbonCoinBlockchain(difficulty=3)
-    validator = CompanyValidator()
-    emission_tracker = EmissionTracker()
-    price_engine = PriceEngine()
-    iot_simulator = IoTSimulator(emission_tracker, blockchain, price_engine)
-    wallet_manager = WalletManager()
-    auth_manager = AuthManager()
-    
-    # Set to 24 hours for production (or 1 hour for testing)
-    iot_simulator.set_update_interval(24)
-    
-    # Setup demo data
-    print("\n📝 Setting up demo companies...")
-    iot_configs = setup_demo_data(blockchain, validator, emission_tracker, auth_manager, wallet_manager)
-    
-    # Start IoT simulation
-    print("\n🔌 Starting IoT emission tracking (Daily updates)...")
-    iot_simulator.start_simulation(iot_configs)
-    
-    # Initialize Flask app
-    init_app(blockchain, validator, emission_tracker, price_engine, iot_simulator, wallet_manager, auth_manager)
-    
-    print("\n" + "=" * 60)
-    print("✓ CarbonCoin Trading Platform is LIVE!")
-    print("=" * 60)
-    print("\n📊 Access the platform:")
-    print("   Landing Page: http://localhost:5000")
-    print("   Login Page: http://localhost:5000/login")
-    print("\n🔐 Demo Accounts:")
-    print("   Admin: admin / admin123")
-    print("   Trader: trader1 / trader123")
-    print("   Company Owners: owner_gti / owner123")
-    print("\n💡 Features:")
-    print("   • Beautiful landing page with animations")
-    print("   • Login system for admin, owners, and traders")
-    print("   • Historical price charts (100 days)")
-    print("   • Real-time emission tracking")
-    print("   • Buy/Sell with $10,000 demo money")
-    print("   • 1% transaction fee")
-    print("\n⚠️  Press Ctrl+C to stop\n")
-    
-    # Run Flask app
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    try:
+        # Initialize components
+        blockchain = CarbonCoinBlockchain(difficulty=2)
+        validator = CompanyValidator()
+        emission_tracker = EmissionTracker()
+        price_engine = PriceEngine()
+        token_storage = TokenStorage()
+        iot_simulator = IoTSimulator(emission_tracker, blockchain, price_engine)
+        
+        # Pass token_storage to IoT simulator
+        iot_simulator.token_storage = token_storage
+        
+        wallet_manager = WalletManager()
+        auth_manager = AuthManager()
+        
+        # Set to 24 hours for production
+        iot_simulator.set_update_interval(24)
+        
+        # Setup demo data
+        iot_configs = setup_demo_data(blockchain, validator, emission_tracker, token_storage)
+        
+        # Start IoT simulation
+        print("\n🔌 Starting IoT emission tracking...")
+        iot_simulator.start_simulation(iot_configs)
+        
+        # Initialize Flask app
+        init_app(blockchain, validator, emission_tracker, price_engine, iot_simulator, wallet_manager, auth_manager)
+        
+        print("\n" + "=" * 60)
+        print("✓ CarbonCoin Trading Platform is LIVE!")
+        print("=" * 60)
+        print("\n📊 Access the platform:")
+        print("   Landing: http://localhost:5000")
+        print("   Login: http://localhost:5000/login")
+        print("   Dashboard: http://localhost:5000/dashboard")
+        print("   Admin: http://localhost:5000/admin")
+        print("\n🔐 Demo Accounts:")
+        print("   Admin: admin / admin123")
+        print("   (Register new traders on login page)")
+        print("\n💡 Features:")
+        print("   • Persistent token data (auto-saves on shutdown)")
+        print("   • Prices update once every 24 hours")
+        print("   • Individual token pages with candlestick charts")
+        print("   • Green/Red candles based on price movement")
+        print("   • Admin can create/delete tokens")
+        print("   • Buy/Sell with real-time updates")
+        print("\n⚠️  Press Ctrl+C to stop (data will auto-save)\n")
+        
+        # Run Flask app
+        app.run(debug=False, host='0.0.0.0', port=5000, use_reloader=False)
+        
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Server stopped by user")
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        save_on_exit()
 
 if __name__ == '__main__':
     main()

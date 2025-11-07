@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ symbol }} - CarbonCoin</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -191,14 +191,70 @@
             margin-bottom: 20px;
         }
 
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
         .chart-title {
             font-size: 1.5em;
-            margin-bottom: 20px;
             color: #e0e6ed;
         }
 
+        .timeframe-selector {
+            display: flex;
+            gap: 8px;
+            background: rgba(255,255,255,0.02);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .timeframe-btn {
+            padding: 10px 18px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: #8892b0;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+            .timeframe-btn:hover {
+                background: rgba(102, 126, 234, 0.1);
+                color: #667eea;
+            }
+
+            .timeframe-btn.active {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                border-color: transparent;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            }
+
+                .timeframe-btn.active::before {
+                    content: '';
+                    position: absolute;
+                    top: -2px;
+                    left: -2px;
+                    right: -2px;
+                    bottom: -2px;
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    border-radius: 10px;
+                    z-index: -1;
+                    opacity: 0.5;
+                    filter: blur(8px);
+                }
+
         .chart-container {
-            height: 400px;
+            height: 450px;
             position: relative;
         }
 
@@ -405,9 +461,19 @@
                     </div>
                 </div>
 
-                <!-- Price Chart -->
+                <!-- Price Chart with Timeframe Selector (NO 1D) -->
                 <div class="chart-card">
-                    <h3 class="chart-title">Price Chart (Candlestick)</h3>
+                    <div class="chart-header">
+                        <h3 class="chart-title">Price Chart</h3>
+                        <div class="timeframe-selector">
+                            <button class="timeframe-btn" onclick="setTimeframe(7)">7D</button>
+                            <button class="timeframe-btn active" onclick="setTimeframe(30)">1M</button>
+                            <button class="timeframe-btn" onclick="setTimeframe(90)">3M</button>
+                            <button class="timeframe-btn" onclick="setTimeframe(180)">6M</button>
+                            <button class="timeframe-btn" onclick="setTimeframe(365)">1Y</button>
+                            <button class="timeframe-btn" onclick="setTimeframe('all')">ALL</button>
+                        </div>
+                    </div>
                     <div class="chart-container">
                         <canvas id="priceChart"></canvas>
                     </div>
@@ -415,7 +481,7 @@
 
                 <!-- Emission Chart -->
                 <div class="chart-card">
-                    <h3 class="chart-title">CO₂ Emission Tracking</h3>
+                    <h3 class="chart-title" style="margin-bottom: 20px;">CO₂ Emission Tracking</h3>
                     <div class="chart-container">
                         <canvas id="emissionChart"></canvas>
                     </div>
@@ -504,350 +570,505 @@
     <div id="notification" class="notification"></div>
 
     <script>
-        const SYMBOL = '{{ symbol }}';
-        let tokenData = null;
-        let walletData = null;
-        let priceChart = null;
-        let emissionChart = null;
+    const SYMBOL = '{{ symbol }}';
+    let tokenData = null;
+    let walletData = null;
+    let priceChart = null;
+    let emissionChart = null;
+    let fullCandleData = [];
+    let currentTimeframe = 30;
 
-        // Switch trade tab
-        function switchTradeTab(tab) {
-            document.querySelectorAll('.trade-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.trade-form').forEach(f => f.classList.remove('active'));
+    function setTimeframe(days) {
+        currentTimeframe = days;
+        document.querySelectorAll('.timeframe-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        updateChartWithTimeframe();
+    }
 
-            if (tab === 'buy') {
-                document.querySelector('.trade-tab.buy').classList.add('active');
-                document.getElementById('buyForm').classList.add('active');
-            } else {
-                document.querySelector('.trade-tab.sell').classList.add('active');
-                document.getElementById('sellForm').classList.add('active');
+    function updateChartWithTimeframe() {
+        if (fullCandleData.length === 0) return;
+
+        let filteredData;
+
+        if (currentTimeframe === 'all') {
+            filteredData = fullCandleData;
+        } else {
+            const now = new Date().getTime();
+            const cutoffTime = now - (currentTimeframe * 24 * 60 * 60 * 1000);
+            filteredData = fullCandleData.filter(candle => candle.x >= cutoffTime);
+
+            if (filteredData.length === 0) {
+                filteredData = fullCandleData.slice(-Math.min(10, fullCandleData.length));
             }
         }
 
-        // Load token data
-        async function loadTokenData() {
-            try {
-                const res = await fetch(`/api/token/${SYMBOL}`);
-                tokenData = await res.json();
+        createCandlestickChart(filteredData);
+    }
 
-                // Update header
-                document.getElementById('companyName').textContent = tokenData.company_name;
-                document.getElementById('currentPrice').textContent = '$' + tokenData.price.toFixed(2);
+    function switchTradeTab(tab) {
+        document.querySelectorAll('.trade-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.trade-form').forEach(f => f.classList.remove('active'));
 
-                const change = tokenData.change_percent_24h || 0;
-                const changeEl = document.getElementById('priceChange');
-                changeEl.textContent = (change >= 0 ? '↑ ' : '↓ ') + Math.abs(change).toFixed(2) + '%';
-                changeEl.className = 'price-change ' + (change >= 0 ? 'change-up' : 'change-down');
-
-                // Emission status
-                const emissionGood = tokenData.emission_performance < 1.0;
-                const indicator = document.getElementById('statusIndicator');
-                indicator.className = 'status-indicator ' + (emissionGood ? 'status-good' : 'status-bad');
-
-                document.getElementById('statusText').textContent =
-                    emissionGood ? '✓ Below Baseline (Good)' : '⚠ Above Baseline (High)';
-                document.getElementById('emissionData').textContent =
-                    `Current: ${tokenData.current_emissions.toFixed(2)} tons | Baseline: ${tokenData.emission_baseline.toFixed(2)} tons`;
-
-                // Create charts
-                createPriceChart(tokenData.candlestick_data);
-                createEmissionChart(tokenData.emission_chart);
-
-            } catch (error) {
-                console.error('Error loading token:', error);
-            }
+        if (tab === 'buy') {
+            document.querySelector('.trade-tab.buy').classList.add('active');
+            document.getElementById('buyForm').classList.add('active');
+        } else {
+            document.querySelector('.trade-tab.sell').classList.add('active');
+            document.getElementById('sellForm').classList.add('active');
         }
+    }
 
-        // Create price chart (simple line chart with candlestick colors)
-        function createPriceChart(candleData) {
+    async function loadTokenData() {
+        try {
+            const res = await fetch(`/api/token/${SYMBOL}`);
+            tokenData = await res.json();
+
+            console.log('Token data loaded:', tokenData);
+            console.log('Candlestick data:', tokenData.candlestick_data);
+
+            document.getElementById('companyName').textContent = tokenData.company_name;
+            document.getElementById('currentPrice').textContent = '$' + tokenData.price.toFixed(2);
+
+            const change = tokenData.change_percent_24h || 0;
+            const changeEl = document.getElementById('priceChange');
+            changeEl.textContent = (change >= 0 ? '↑ ' : '↓ ') + Math.abs(change).toFixed(2) + '%';
+            changeEl.className = 'price-change ' + (change >= 0 ? 'change-up' : 'change-down');
+            document.getElementById('currentPrice').className = 'current-price ' + (change >= 0 ? 'price-up' : 'price-down');
+
+            const emissionGood = tokenData.emission_performance < 1.0;
+            const indicator = document.getElementById('statusIndicator');
+            indicator.className = 'status-indicator ' + (emissionGood ? 'status-good' : 'status-bad');
+
+            document.getElementById('statusText').textContent =
+                emissionGood ? '✓ Below Baseline (Good)' : '⚠ Above Baseline (High)';
+            document.getElementById('emissionData').textContent =
+                `Current: ${tokenData.current_emissions.toFixed(2)} tons | Baseline: ${tokenData.emission_baseline.toFixed(2)} tons`;
+
+            fullCandleData = tokenData.candlestick_data;
+            console.log('Full candle data loaded:', fullCandleData.length, 'candles');
+
+            updateChartWithTimeframe();
+            createEmissionChart(tokenData.emission_chart);
+
+        } catch (error) {
+            console.error('Error loading token:', error);
+        }
+    }
+
+        function createCandlestickChart(candleData) {
+            console.log('Creating candlestick chart with', candleData.length, 'candles');
+
             const ctx = document.getElementById('priceChart');
+            if (!ctx) {
+                console.error('Canvas element not found!');
+                return;
+            }
 
             if (priceChart) {
                 priceChart.destroy();
             }
 
-            // Convert to simple line chart data
-            const chartData = candleData.map(d => ({
-                x: new Date(d.x),
-                y: d.c
-            }));
+            if (!candleData || candleData.length === 0) {
+                console.error('No candle data available');
+                return;
+            }
+
+            const labels = [];
+            const wickYValues = [];
+            const bodyYValues = [];
+            const wickColors = [];
+            const bodyColors = [];
+            const borderColors = [];
+
+            candleData.forEach(candle => {
+                const date = new Date(candle.x);
+                labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+                const isGreen = candle.c >= candle.o;
+                const color = isGreen ? '#10b981' : '#ef4444';
+
+                wickYValues.push([candle.l, candle.h]);
+                wickColors.push(color + '40');
+
+                bodyYValues.push([Math.min(candle.o, candle.c), Math.max(candle.o, candle.c)]);
+                bodyColors.push(color);
+                borderColors.push(color);
+            });
+
+            // ULTRA RESPONSIVE SIZING
+            const numCandles = candleData.length;
+            let wickWidth, bodyWidth, categoryWidth;
+
+            if (numCandles <= 7) {
+                // VERY SMALL for 7 days
+                wickWidth = 0.08;   // Thin wicks
+                bodyWidth = 0.35;   // Medium bodies
+                categoryWidth = 0.5; // Lots of spacing
+            } else if (numCandles <= 14) {
+                wickWidth = 0.12;
+                bodyWidth = 0.45;
+                categoryWidth = 0.6;
+            } else if (numCandles <= 30) {
+                wickWidth = 0.2;
+                bodyWidth = 0.6;
+                categoryWidth = 0.7;
+            } else if (numCandles <= 90) {
+                wickWidth = 0.3;
+                bodyWidth = 0.75;
+                categoryWidth = 0.8;
+            } else {
+                wickWidth = 0.35;
+                bodyWidth = 0.85;
+                categoryWidth = 0.85;
+            }
+
+            console.log(`Rendering ${numCandles} candles with wickWidth: ${wickWidth}, bodyWidth: ${bodyWidth}`);
 
             priceChart = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
-                    datasets: [{
-                        label: 'Price',
-                        data: chartData,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 0,
-                        pointHoverRadius: 5
-                    }]
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Wick',
+                            data: wickYValues,
+                            backgroundColor: wickColors,
+                            borderColor: borderColors,
+                            borderWidth: numCandles <= 7 ? 2 : 1,  // Thicker borders for fewer candles
+                            barPercentage: wickWidth,
+                            categoryPercentage: categoryWidth,
+                            borderSkipped: false
+                        },
+                        {
+                            label: 'Body',
+                            data: bodyYValues,
+                            backgroundColor: bodyColors,
+                            borderColor: borderColors,
+                            borderWidth: numCandles <= 7 ? 3 : 2,  // Thicker borders for fewer candles
+                            barPercentage: bodyWidth,
+                            categoryPercentage: categoryWidth,
+                            borderSkipped: false
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false },
+                        legend: {
+                            display: false
+                        },
                         tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(26, 31, 58, 0.95)',
+                            titleColor: '#e0e6ed',
+                            bodyColor: '#e0e6ed',
+                            borderColor: 'rgba(102, 126, 234, 0.3)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
                             callbacks: {
-                                label: function(context) {
-                                    return '$' + context.parsed.y.toFixed(2);
+                                title: function (context) {
+                                    const index = context[0].dataIndex;
+                                    return labels[index];
+                                },
+                                label: function (context) {
+                                    const index = context.dataIndex;
+                                    if (index < candleData.length) {
+                                        const candle = candleData[index];
+                                        const isGreen = candle.c >= candle.o;
+                                        const symbol = isGreen ? '📈' : '📉';
+                                        const change = ((candle.c - candle.o) / candle.o * 100).toFixed(2);
+                                        return [
+                                            `${symbol} ${isGreen ? 'UP' : 'DOWN'} ${Math.abs(change)}%`,
+                                            '',
+                                            `Open:  $${candle.o.toFixed(2)}`,
+                                            `High:  $${candle.h.toFixed(2)}`,
+                                            `Low:   $${candle.l.toFixed(2)}`,
+                                            `Close: $${candle.c.toFixed(2)}`
+                                        ];
+                                    }
+                                    return '';
                                 }
                             }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            type: 'time',
-                            time: {
-                                unit: 'day'
+                        },
+                        zoom: {
+                            pan: {
+                                enabled: true,
+                                mode: 'x'
                             },
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#8892b0' }
-                        },
-                        y: {
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: {
-                                color: '#8892b0',
-                                callback: value => '$' + value.toFixed(2)
-                            }
-                        }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    }
-                }
-            });
-        }
-
-        // Create emission chart
-        function createEmissionChart(emissionData) {
-            const ctx = document.getElementById('emissionChart');
-
-            if (emissionChart) {
-                emissionChart.destroy();
-            }
-
-            emissionChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: emissionData.map(d => d.date),
-                    datasets: [{
-                        label: 'CO₂ Emissions',
-                        data: emissionData.map(d => d.emissions),
-                        borderColor: '#764ba2',
-                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 0,
-                        pointHoverRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.parsed.y.toFixed(2) + ' tons';
-                                }
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                    speed: 0.1
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x'
                             }
                         }
                     },
                     scales: {
                         x: {
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#8892b0' }
-                        },
-                        y: {
-                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            grid: {
+                                color: 'rgba(255,255,255,0.05)',
+                                drawBorder: true,
+                                borderColor: 'rgba(255,255,255,0.1)'
+                            },
                             ticks: {
                                 color: '#8892b0',
-                                callback: value => value.toFixed(0) + ' tons'
+                                maxRotation: 0,
+                                autoSkip: false,  // Show all labels for 7D
+                                font: {
+                                    size: numCandles <= 7 ? 12 : 11  // Bigger labels for fewer candles
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255,255,255,0.05)',
+                                drawBorder: true,
+                                borderColor: 'rgba(255,255,255,0.1)'
+                            },
+                            ticks: {
+                                color: '#8892b0',
+                                callback: value => '$' + value.toFixed(2),
+                                font: {
+                                    size: 11
+                                },
+                                padding: 10
                             }
                         }
                     },
                     interaction: {
-                        intersect: false,
-                        mode: 'index'
+                        mode: 'index',
+                        intersect: false
+                    },
+                    layout: {
+                        padding: {
+                            left: numCandles <= 7 ? 20 : 10,
+                            right: numCandles <= 7 ? 20 : 10,
+                            top: 15,
+                            bottom: 10
+                        }
                     }
                 }
             });
+
+            console.log(`✓ Chart rendered with ${numCandles} candles`);
         }
 
-        // Load wallet
-        async function loadWallet() {
-            try {
-                const res = await fetch('/api/wallet');
-                walletData = await res.json();
-                document.getElementById('walletBalance').textContent =
-                    '$' + walletData.usd_balance.toFixed(2);
-            } catch (error) {
-                console.error('Error loading wallet:', error);
+    function createEmissionChart(emissionData) {
+        const ctx = document.getElementById('emissionChart');
+        if (!ctx) return;
+
+        if (emissionChart) {
+            emissionChart.destroy();
+        }
+
+        emissionChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: emissionData.map(d => d.date),
+                datasets: [{
+                    label: 'CO₂ Emissions',
+                    data: emissionData.map(d => d.emissions),
+                    borderColor: '#764ba2',
+                    backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#764ba2',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(26, 31, 58, 0.95)',
+                        titleColor: '#e0e6ed',
+                        bodyColor: '#e0e6ed',
+                        borderColor: 'rgba(118, 75, 162, 0.3)',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return '  ' + context.parsed.y.toFixed(2) + ' tons CO₂';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#8892b0', maxTicksLimit: 10 }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: {
+                            color: '#8892b0',
+                            callback: value => value.toFixed(0) + ' tons'
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                }
             }
+        });
+    }
+
+    async function loadWallet() {
+        try {
+            const res = await fetch('/api/wallet');
+            walletData = await res.json();
+            document.getElementById('walletBalance').textContent =
+                '$' + walletData.usd_balance.toFixed(2);
+        } catch (error) {
+            console.error('Error loading wallet:', error);
+        }
+    }
+
+    function updateBuyCalculation() {
+        const amount = parseFloat(document.getElementById('buyAmount').value) || 0;
+
+        if (!tokenData || amount <= 0) {
+            document.getElementById('buySummary').style.display = 'none';
+            return;
         }
 
-        // Update buy calculation
-        function updateBuyCalculation() {
-            const amount = parseFloat(document.getElementById('buyAmount').value) || 0;
+        const subtotal = amount * tokenData.price;
+        const fee = subtotal * 0.01;
+        const total = subtotal + fee;
 
-            if (!tokenData || amount <= 0) {
-                document.getElementById('buySummary').style.display = 'none';
+        document.getElementById('buyPrice').textContent = '$' + tokenData.price.toFixed(2);
+        document.getElementById('buySubtotal').textContent = '$' + subtotal.toFixed(2);
+        document.getElementById('buyFee').textContent = '$' + fee.toFixed(2);
+        document.getElementById('buyTotal').textContent = '$' + total.toFixed(2);
+        document.getElementById('buySummary').style.display = 'block';
+    }
+
+    async function updateSellCalculation() {
+        const amount = parseFloat(document.getElementById('sellAmount').value) || 0;
+
+        if (!tokenData) {
+            document.getElementById('sellSummary').style.display = 'none';
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/portfolio');
+            const portfolio = await res.json();
+            const holding = portfolio.holdings.find(h => h.symbol === SYMBOL);
+            const available = holding?.amount || 0;
+
+            document.getElementById('sellAvailable').textContent =
+                `Available: ${available.toFixed(2)} ${SYMBOL}`;
+
+            if (amount <= 0) {
+                document.getElementById('sellSummary').style.display = 'none';
                 return;
             }
 
             const subtotal = amount * tokenData.price;
             const fee = subtotal * 0.01;
-            const total = subtotal + fee;
+            const total = subtotal - fee;
 
-            document.getElementById('buyPrice').textContent = '$' + tokenData.price.toFixed(2);
-            document.getElementById('buySubtotal').textContent = '$' + subtotal.toFixed(2);
-            document.getElementById('buyFee').textContent = '$' + fee.toFixed(2);
-            document.getElementById('buyTotal').textContent = '$' + total.toFixed(2);
-            document.getElementById('buySummary').style.display = 'block';
+            document.getElementById('sellPrice').textContent = '$' + tokenData.price.toFixed(2);
+            document.getElementById('sellSubtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('sellFee').textContent = '$' + fee.toFixed(2);
+            document.getElementById('sellTotal').textContent = '$' + total.toFixed(2);
+            document.getElementById('sellSummary').style.display = 'block';
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    async function executeBuy() {
+        const amount = parseFloat(document.getElementById('buyAmount').value);
+
+        if (!amount || amount <= 0) {
+            showNotification('Please enter amount', 'error');
+            return;
         }
 
-        // Update sell calculation
-        async function updateSellCalculation() {
-            const amount = parseFloat(document.getElementById('sellAmount').value) || 0;
+        try {
+            const res = await fetch('/api/buy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token_symbol: SYMBOL, amount: amount })
+            });
 
-            if (!tokenData) {
+            const result = await res.json();
+
+            if (result.success) {
+                showNotification(`✓ Bought ${amount} ${SYMBOL} for $${result.total.toFixed(2)}`, 'success');
+                document.getElementById('buyAmount').value = '';
+                document.getElementById('buySummary').style.display = 'none';
+                setTimeout(() => { loadWallet(); loadTokenData(); }, 500);
+            } else {
+                showNotification(result.error, 'error');
+            }
+        } catch (error) {
+            showNotification('Transaction failed: ' + error.message, 'error');
+        }
+    }
+
+    async function executeSell() {
+        const amount = parseFloat(document.getElementById('sellAmount').value);
+
+        if (!amount || amount <= 0) {
+            showNotification('Please enter amount', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/sell', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token_symbol: SYMBOL, amount: amount })
+            });
+
+            const result = await res.json();
+
+            if (result.success) {
+                showNotification(`✓ Sold ${amount} ${SYMBOL} for $${result.net_proceeds.toFixed(2)}`, 'success');
+                document.getElementById('sellAmount').value = '';
                 document.getElementById('sellSummary').style.display = 'none';
-                return;
+                setTimeout(() => { loadWallet(); loadTokenData(); }, 500);
+            } else {
+                showNotification(result.error, 'error');
             }
-
-            // Get portfolio to check available balance
-            try {
-                const res = await fetch('/api/portfolio');
-                const portfolio = await res.json();
-                const holding = portfolio.holdings.find(h => h.symbol === SYMBOL);
-                const available = holding?.amount || 0;
-
-                document.getElementById('sellAvailable').textContent =
-                    `Available: ${available.toFixed(2)} ${SYMBOL}`;
-
-                if (amount <= 0) {
-                    document.getElementById('sellSummary').style.display = 'none';
-                    return;
-                }
-
-                const subtotal = amount * tokenData.price;
-                const fee = subtotal * 0.01;
-                const total = subtotal - fee;
-
-                document.getElementById('sellPrice').textContent = '$' + tokenData.price.toFixed(2);
-                document.getElementById('sellSubtotal').textContent = '$' + subtotal.toFixed(2);
-                document.getElementById('sellFee').textContent = '$' + fee.toFixed(2);
-                document.getElementById('sellTotal').textContent = '$' + total.toFixed(2);
-                document.getElementById('sellSummary').style.display = 'block';
-            } catch (error) {
-                console.error('Error:', error);
-            }
+        } catch (error) {
+            showNotification('Transaction failed: ' + error.message, 'error');
         }
+    }
 
-        // Execute buy
-        async function executeBuy() {
-            const amount = parseFloat(document.getElementById('buyAmount').value);
+    function showNotification(message, type) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = 'block';
+        setTimeout(() => { notification.style.display = 'none'; }, 4000);
+    }
 
-            if (!amount || amount <= 0) {
-                showNotification('Please enter amount', 'error');
-                return;
-            }
+    console.log('Loading token page for:', SYMBOL);
+    loadTokenData();
+    loadWallet();
 
-            try {
-                const res = await fetch('/api/buy', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        token_symbol: SYMBOL,
-                        amount: amount
-                    })
-                });
-
-                const result = await res.json();
-
-                if (result.success) {
-                    showNotification(`✓ Bought ${amount} ${SYMBOL} for $${result.total.toFixed(2)}`, 'success');
-                    document.getElementById('buyAmount').value = '';
-                    document.getElementById('buySummary').style.display = 'none';
-                    setTimeout(() => {
-                        loadWallet();
-                        loadTokenData();
-                    }, 500);
-                } else {
-                    showNotification(result.error, 'error');
-                }
-            } catch (error) {
-                showNotification('Transaction failed: ' + error.message, 'error');
-            }
-        }
-
-        // Execute sell
-        async function executeSell() {
-            const amount = parseFloat(document.getElementById('sellAmount').value);
-
-            if (!amount || amount <= 0) {
-                showNotification('Please enter amount', 'error');
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/sell', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        token_symbol: SYMBOL,
-                        amount: amount
-                    })
-                });
-
-                const result = await res.json();
-
-                if (result.success) {
-                    showNotification(`✓ Sold ${amount} ${SYMBOL} for $${result.net_proceeds.toFixed(2)}`, 'success');
-                    document.getElementById('sellAmount').value = '';
-                    document.getElementById('sellSummary').style.display = 'none';
-                    setTimeout(() => {
-                        loadWallet();
-                        loadTokenData();
-                    }, 500);
-                } else {
-                    showNotification(result.error, 'error');
-                }
-            } catch (error) {
-                showNotification('Transaction failed: ' + error.message, 'error');
-            }
-        }
-
-        // Show notification
-        function showNotification(message, type) {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification ${type}`;
-            notification.style.display = 'block';
-
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 4000);
-        }
-
-        // Initial load
+    setInterval(() => {
         loadTokenData();
         loadWallet();
-
-        // Auto-refresh every 30 seconds
-        setInterval(() => {
-            loadTokenData();
-            loadWallet();
-        }, 30000);
+    }, 30000);
     </script>
 </body>
 </html>

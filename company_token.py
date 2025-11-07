@@ -1,4 +1,4 @@
-from typing import Dict, List
+﻿from typing import Dict, List, Optional
 from time import time
 import uuid
 import random
@@ -6,28 +6,69 @@ import random
 class CompanyToken:
     def __init__(self, company_name: str, symbol: str, 
                  initial_supply: float, emission_baseline: float,
-                 industry_type: str, company_scale: str):
-        self.token_id = str(uuid.uuid4())
-        self.company_name = company_name
-        self.symbol = symbol.upper()
-        self.total_supply = initial_supply
-        self.circulating_supply = 0
-        self.emission_baseline = emission_baseline
-        self.current_emissions = emission_baseline
-        self.industry_type = industry_type
-        self.company_scale = company_scale
-        self.price = 100.0
-        self.price_history = []
-        self.emission_history = []
-        self.candlestick_data = []  # OHLC data
-        self.volume_24h = 0
-        self.trades = []
-        self.is_verified = False
-        self.created_at = time()
-        self.owner_address = None
+                 industry_type: str, company_scale: str,
+                 saved_data: Optional[Dict] = None):
         
-        # Generate historical data
-        self._generate_historical_data()
+        if saved_data:
+            # Load from saved data
+            self._load_from_saved(saved_data)
+        else:
+            # Create new token
+            self.token_id = str(uuid.uuid4())
+            self.company_name = company_name
+            self.symbol = symbol.upper()
+            self.total_supply = initial_supply
+            self.circulating_supply = 0
+            self.emission_baseline = emission_baseline
+            self.current_emissions = emission_baseline
+            self.industry_type = industry_type
+            self.company_scale = company_scale
+            self.price = 100.0
+            self.price_history = []
+            self.emission_history = []
+            self.candlestick_data = []
+            self.volume_24h = 0
+            self.trades = []
+            self.is_verified = False
+            self.created_at = time()
+            self.owner_address = None
+            
+            # Generate historical data ONLY for new tokens
+            self._generate_historical_data()
+    
+    def _load_from_saved(self, data: Dict):
+        """Load token from saved data - NO MODIFICATIONS"""
+        self.token_id = data.get('token_id', str(uuid.uuid4()))
+        self.company_name = data['company_name']
+        self.symbol = data['symbol']
+        self.total_supply = data['total_supply']
+        self.circulating_supply = data.get('circulating_supply', 0)
+        self.emission_baseline = data['emission_baseline']
+        self.current_emissions = data.get('current_emissions', data['emission_baseline'])
+        self.industry_type = data['industry_type']
+        self.company_scale = data['company_scale']
+        self.price = data.get('price', 100.0)
+        
+        # Convert lists back to tuples (JSON stores tuples as lists)
+        price_history_data = data.get('price_history', [])
+        self.price_history = [tuple(item) if isinstance(item, list) else item 
+                              for item in price_history_data]
+        
+        emission_history_data = data.get('emission_history', [])
+        self.emission_history = [tuple(item) if isinstance(item, list) else item 
+                                 for item in emission_history_data]
+        
+        self.candlestick_data = data.get('candlestick_data', [])
+        self.volume_24h = data.get('volume_24h', 0)
+        self.trades = []
+        self.is_verified = data.get('is_verified', False)
+        self.created_at = data.get('created_at', time())
+        self.owner_address = data.get('owner_address')
+        
+        # Verify data integrity
+        if self.candlestick_data:
+            last_candle = self.candlestick_data[-1]
+            print(f"      Loaded: {len(self.candlestick_data)} candles, Last: ${last_candle['close']:.2f}")
     
     def _generate_historical_data(self):
         """Generate realistic historical price and emission data with OHLC"""
@@ -41,7 +82,7 @@ class CompanyToken:
             
             # OHLC for candlestick
             open_price = base_price
-            daily_change = random.uniform(-0.08, 0.08)  # �8% daily
+            daily_change = random.uniform(-0.08, 0.08)  # ±8% daily
             close_price = open_price * (1 + daily_change)
             
             high_price = max(open_price, close_price) * random.uniform(1.0, 1.05)
@@ -71,6 +112,8 @@ class CompanyToken:
         # Set current values
         self.price = self.candlestick_data[-1]['close']
         self.current_emissions = self.emission_history[-1][1]
+        
+        print(f"      Generated: {len(self.candlestick_data)} candles, Current: ${self.price:.2f}")
     
     def update_emissions(self, new_emissions: float):
         """Update current CO2 emissions"""
@@ -80,10 +123,24 @@ class CompanyToken:
         if len(self.emission_history) > 100:
             self.emission_history = self.emission_history[-100:]
     
-    def update_price(self, new_price: float):
+    def update_price(self, new_price: float, force: bool = False):
         """Update token price and candlestick"""
         current_time = time()
         
+        # Prevent price updates if not forced and less than 24h since last candle
+        if not force and self.candlestick_data:
+            last_candle = self.candlestick_data[-1]
+            time_diff = current_time - last_candle['timestamp']
+            
+            if time_diff < 86400:  # Less than 24 hours
+                # Only update the current candle, don't change base price
+                last_candle['high'] = max(last_candle['high'], new_price)
+                last_candle['low'] = min(last_candle['low'], new_price)
+                last_candle['close'] = new_price
+                self.price = new_price
+                return
+        
+        # Update price history
         self.price = new_price
         self.price_history.append((current_time, new_price))
         
@@ -95,7 +152,7 @@ class CompanyToken:
             last_candle = self.candlestick_data[-1]
             time_diff = current_time - last_candle['timestamp']
             
-            if time_diff > 86400:  # New day
+            if time_diff >= 86400:  # New day
                 new_candle = {
                     'timestamp': current_time,
                     'open': last_candle['close'],
@@ -193,18 +250,21 @@ class CompanyToken:
     
     def get_24h_change(self) -> Dict:
         """Get 24h price change"""
-        if len(self.candlestick_data) < 2:
+        if not self.candlestick_data or len(self.candlestick_data) < 2:
             return {'change': 0, 'change_percent': 0}
         
-        yesterday = self.candlestick_data[-2]['close']
-        today = self.candlestick_data[-1]['close']
-        change = today - yesterday
-        change_percent = (change / yesterday) * 100 if yesterday > 0 else 0
-        
-        return {
-            'change': round(change, 2),
-            'change_percent': round(change_percent, 2)
-        }
+        try:
+            yesterday = self.candlestick_data[-2]['close']
+            today = self.candlestick_data[-1]['close']
+            change = today - yesterday
+            change_percent = (change / yesterday) * 100 if yesterday > 0 else 0
+            
+            return {
+                'change': round(change, 2),
+                'change_percent': round(change_percent, 2)
+            }
+        except (KeyError, IndexError, ZeroDivisionError):
+            return {'change': 0, 'change_percent': 0}
     
     def to_dict(self) -> Dict:
         change_data = self.get_24h_change()
