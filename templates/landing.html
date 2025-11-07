@@ -1,0 +1,491 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarbonCoin - Trade Green, Earn Clean</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Animated gradient background */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Floating particles */
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-100px) rotate(180deg);
+            }
+        }
+
+        .particle:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .particle:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            left: 80%;
+            animation-delay: 2s;
+        }
+
+        .particle:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            left: 50%;
+            animation-delay: 4s;
+        }
+
+        .particle:nth-child(4) {
+            width: 40px;
+            height: 40px;
+            left: 30%;
+            animation-delay: 6s;
+        }
+
+        .particle:nth-child(5) {
+            width: 70px;
+            height: 70px;
+            left: 70%;
+            animation-delay: 8s;
+        }
+
+        .hero-content {
+            z-index: 10;
+            max-width: 800px;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-size: 4em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            animation: fadeInUp 1s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero p {
+            font-size: 1.5em;
+            margin-bottom: 40px;
+            animation: fadeInUp 1s 0.3s backwards;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            animation: fadeInUp 1s 0.6s backwards;
+        }
+
+        .btn {
+            padding: 18px 40px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 3px solid white;
+        }
+
+            .btn-secondary:hover {
+                background: white;
+                color: #667eea;
+                transform: translateY(-5px);
+            }
+
+        /* Features Section */
+        .features {
+            padding: 100px 20px;
+            background: #f9fafb;
+        }
+
+            .features h2 {
+                text-align: center;
+                font-size: 3em;
+                color: #333;
+                margin-bottom: 60px;
+            }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+            .feature-card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            }
+
+        .feature-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 80px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            animation: countUp 2s;
+        }
+
+        .stat-item p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        /* How it Works */
+        .how-it-works {
+            padding: 100px 20px;
+            background: white;
+        }
+
+            .how-it-works h2 {
+                text-align: center;
+                font-size: 3em;
+                color: #333;
+                margin-bottom: 60px;
+            }
+
+        .steps {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+            .step:nth-child(even) {
+                flex-direction: row-reverse;
+            }
+
+        .step-number {
+            font-size: 5em;
+            font-weight: bold;
+            color: #667eea;
+            opacity: 0.2;
+            min-width: 100px;
+        }
+
+        .step-content h3 {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .step-content p {
+            font-size: 1.2em;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 20px;
+            background: #1f2937;
+            color: white;
+            text-align: center;
+        }
+
+            footer p {
+                font-size: 1.1em;
+            }
+
+        /* Scroll animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s;
+        }
+
+            .fade-in.visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+
+        <div class="hero-content">
+            <h1>🌍 CarbonCoin Exchange</h1>
+            <p>Trade Green, Earn Clean. The world's first emission-based cryptocurrency platform.</p>
+            <div class="cta-buttons">
+                <a href="/login" class="btn btn-primary">Start Trading</a>
+                <a href="#features" class="btn btn-secondary">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <h2>Why CarbonCoin?</h2>
+        <div class="features-grid">
+            <div class="feature-card fade-in">
+                <div class="feature-icon">🌱</div>
+                <h3>Emission-Based</h3>
+                <p>Token prices tied directly to real-time CO2 emissions. Lower emissions = Higher value.</p>
+            </div>
+
+            <div class="feature-card fade-in">
+                <div class="feature-icon">📊</div>
+                <h3>Real-Time Data</h3>
+                <p>Live IoT sensors track emissions 24/7. Complete transparency and verifiable data.</p>
+            </div>
+
+            <div class="feature-card fade-in">
+                <div class="feature-icon">🔒</div>
+                <h3>Blockchain Verified</h3>
+                <p>All companies verified and registered. No scams, no rugpulls. Trade with confidence.</p>
+            </div>
+
+            <div class="feature-card fade-in">
+                <div class="feature-icon">💰</div>
+                <h3>Profit & Impact</h3>
+                <p>Make money while incentivizing companies to reduce their carbon footprint.</p>
+            </div>
+
+            <div class="feature-card fade-in">
+                <div class="feature-icon">⚡</div>
+                <h3>Instant Trading</h3>
+                <p>Buy and sell tokens instantly with our advanced trading platform. 1% fee on all trades.</p>
+            </div>
+
+            <div class="feature-card fade-in">
+                <div class="feature-icon">📈</div>
+                <h3>Portfolio Tracking</h3>
+                <p>Monitor your investments with real-time charts and comprehensive analytics.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <h3 id="tokenCount">4</h3>
+                <p>Active Tokens</p>
+            </div>
+            <div class="stat-item">
+                <h3 id="userCount">100+</h3>
+                <p>Active Traders</p>
+            </div>
+            <div class="stat-item">
+                <h3 id="marketCap">$2.5M</h3>
+                <p>Market Cap</p>
+            </div>
+            <div class="stat-item">
+                <h3 id="co2Reduced">500T</h3>
+                <p>CO₂ Reduced</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <h2>How It Works</h2>
+        <div class="steps">
+            <div class="step fade-in">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Companies Register</h3>
+                    <p>Verified companies register on the platform and receive CO2 emission guidelines based on their industry and scale.</p>
+                </div>
+            </div>
+
+            <div class="step fade-in">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>IoT Sensors Track Emissions</h3>
+                    <p>Real-time IoT devices monitor actual CO2 emissions at industrial sites, ensuring complete transparency.</p>
+                </div>
+            </div>
+
+            <div class="step fade-in">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Prices Adjust Automatically</h3>
+                    <p>Token prices rise when emissions are below baseline (green candle) and fall when above (red candle).</p>
+                </div>
+            </div>
+
+            <div class="step fade-in">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>You Trade & Profit</h3>
+                    <p>Buy tokens from eco-friendly companies and watch your portfolio grow as they maintain low emissions!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2024 CarbonCoin Exchange. Trade responsibly. Save the planet. 🌍</p>
+    </footer>
+
+    <script>
+        // Scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const stats = await res.json();
+
+                document.getElementById('tokenCount').textContent = stats.total_tokens;
+                document.getElementById('userCount').textContent = stats.total_users + '+';
+                document.getElementById('marketCap').textContent =
+                    '$' + (stats.total_market_cap / 1000000).toFixed(1) + 'M';
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        loadStats();
+    </script>
+</body>
+</html>
