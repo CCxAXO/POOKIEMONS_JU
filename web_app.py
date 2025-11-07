@@ -29,10 +29,22 @@ def login_page():
 
 @app.route('/dashboard')
 def dashboard():
-    """Trading dashboard"""
+    """Trading dashboard - Coins list"""
     if 'user' not in session:
         return redirect(url_for('login_page'))
     return render_template('dashboard.html')
+
+@app.route('/token/<symbol>')
+def token_page(symbol):
+    """Individual token detail page"""
+    if 'user' not in session:
+        return redirect(url_for('login_page'))
+    
+    # Check if token exists
+    if symbol not in blockchain.registered_tokens:
+        return redirect(url_for('dashboard'))
+    
+    return render_template('token_detail.html', symbol=symbol)
 
 @app.route('/admin')
 def admin_panel():
@@ -40,13 +52,6 @@ def admin_panel():
     if 'user' not in session or session.get('role') != 'admin':
         return redirect(url_for('login_page'))
     return render_template('admin.html')
-
-@app.route('/company')
-def company_panel():
-    """Company owner panel"""
-    if 'user' not in session or session.get('role') != 'company_owner':
-        return redirect(url_for('login_page'))
-    return render_template('company.html')
 
 # API Routes
 @app.route('/api/login', methods=['POST'])
@@ -60,7 +65,6 @@ def api_login():
         session['role'] = result['user']['role']
         session['company_symbol'] = result['user'].get('company_symbol')
         
-        # Create wallet for trader
         if result['user']['role'] == 'trader':
             if not wallet_manager.get_wallet(result['user']['username']):
                 wallet_manager.create_wallet(result['user']['username'], 10000.0)
@@ -81,19 +85,25 @@ def api_register():
     data = request.json
     
     try:
-        user = auth_manager.create_user(
+        success = auth_manager.create_user(
             data['username'],
             data['password'],
             'trader'
         )
         
-        # Create wallet with $10,000
-        wallet_manager.create_wallet(data['username'], 10000.0)
-        
-        return jsonify({
-            'success': True,
-            'message': 'Account created successfully'
-        })
+        if success:
+            wallet_manager.create_wallet(data['username'], 10000.0)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Account created successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Username already exists'
+            }), 400
+            
     except Exception as e:
         return jsonify({
             'success': False,
@@ -107,21 +117,21 @@ def get_tokens():
     
     for token_data in tokens:
         token = blockchain.registered_tokens[token_data['symbol']]
-        token_data['candle'] = price_engine.get_candle_data(token)
-        token_data['chart_data'] = token.get_chart_data(100)
+        change_data = token.get_24h_change()
+        token_data['change_24h'] = change_data['change']
+        token_data['change_percent_24h'] = change_data['change_percent']
     
     return jsonify(tokens)
 
 @app.route('/api/token/<symbol>', methods=['GET'])
 def get_token(symbol):
-    """Get specific token details"""
+    """Get specific token details with candlestick data"""
     if symbol not in blockchain.registered_tokens:
         return jsonify({'error': 'Token not found'}), 404
     
     token = blockchain.registered_tokens[symbol]
     token_data = token.to_dict()
-    token_data['candle'] = price_engine.get_candle_data(token)
-    token_data['chart_data'] = token.get_chart_data(100)
+    token_data['candlestick_data'] = token.get_candlestick_data(50)
     token_data['emission_chart'] = token.get_emission_chart_data(100)
     
     return jsonify(token_data)
@@ -139,23 +149,6 @@ def get_wallet():
         wallet = wallet_manager.create_wallet(username)
     
     return jsonify(wallet.to_dict(blockchain))
-
-@app.route('/api/wallet/history', methods=['GET'])
-def get_wallet_history():
-    """Get transaction history"""
-    if 'user' not in session:
-        return jsonify({'error': 'Not logged in'}), 401
-    
-    username = session.get('user')
-    wallet = wallet_manager.get_wallet(username)
-    
-    if not wallet:
-        return jsonify({'error': 'Wallet not found'}), 404
-    
-    return jsonify({
-        'transactions': wallet.transaction_history[-50:],
-        'total': len(wallet.transaction_history)
-    })
 
 @app.route('/api/buy', methods=['POST'])
 def buy_tokens():
@@ -253,22 +246,6 @@ def get_blockchain():
         'registered_tokens': len(blockchain.registered_tokens)
     })
 
-@app.route('/api/token/<symbol>/candlestick', methods=['GET'])
-def get_candlestick(symbol):
-    """Get candlestick data for a token"""
-    if symbol not in blockchain.registered_tokens:
-        return jsonify({'error': 'Token not found'}), 404
-    
-    token = blockchain.registered_tokens[symbol]
-    period = int(request.args.get('period', 50))
-    
-    return jsonify({
-        'symbol': symbol,
-        'candlestick_data': token.get_candlestick_data(period),
-        'current_price': token.price,
-        'change_24h': token.get_24h_change()
-    })
-
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
     """Get platform statistics"""
@@ -288,6 +265,87 @@ def get_stats():
         'total_market_cap': total_market_cap,
         'blockchain_length': len(blockchain.chain)
     })
+
+# ADMIN ROUTES
+@app.route('/api/admin/create_token', methods=['POST'])
+def admin_create_token():
+    """Admin: Create new token"""
+    if 'user' not in session or session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    data = request.json
+    
+    try:
+        from company_token import CompanyToken
+        
+        # Validate company first
+        app_id = validator.submit_application(data)
+        validator.auto_validate_demo(app_id)
+        
+        # Create token
+        token = CompanyToken(
+            company_name=data['company_name'],
+            symbol=data['symbol'],
+            initial_supply=float(data.get('initial_supply', 1000000)),
+            emission_baseline=float(data['emission_baseline']),
+            industry_type=data['industry_type'],
+            company_scale=data['company_scale']
+        )
+        token.is_verified = True
+        token.owner_address = f"WALLET_{data['symbol']}"
+        
+        # Register on blockchain
+        blockchain.register_token(token)
+        
+        # Mint initial supply
+        token.mint(token.total_supply * 0.3, token.owner_address, blockchain)
+        blockchain.mine_pending_transactions('ADMIN')
+        
+        # Register IoT device
+        emission_tracker.register_iot_device(
+            token.symbol,
+            f"IOT_{token.symbol}_001",
+            "CO2_SENSOR",
+            data.get('location', 'Industrial Site')
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': f'Token {token.symbol} created successfully',
+            'token': token.to_dict()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+@app.route('/api/admin/delete_token/<symbol>', methods=['DELETE'])
+def admin_delete_token(symbol):
+    """Admin: Delete token"""
+    if 'user' not in session or session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        success = blockchain.delete_token(symbol)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Token {symbol} deleted successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Token not found'
+            }), 404
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
 
 def init_app(bc, val, et, pe, iot, wm, auth):
     """Initialize app with instances"""

@@ -1,22 +1,13 @@
 ﻿from typing import Dict, Optional
-import hashlib
 import secrets
+from user_storage import UserStorage
 
 class User:
-    def __init__(self, username: str, password: str, role: str, company_symbol: str = None):
+    def __init__(self, username: str, role: str, company_symbol: str = None):
         self.username = username
-        self.password_hash = self._hash_password(password)
-        self.role = role  # 'admin', 'company_owner', 'trader'
+        self.role = role
         self.company_symbol = company_symbol
         self.session_token = None
-    
-    def _hash_password(self, password: str) -> str:
-        """Hash password using SHA-256"""
-        return hashlib.sha256(password.encode()).hexdigest()
-    
-    def verify_password(self, password: str) -> bool:
-        """Verify password"""
-        return self._hash_password(password) == self.password_hash
     
     def create_session(self) -> str:
         """Create session token"""
@@ -33,31 +24,27 @@ class User:
 
 class AuthManager:
     def __init__(self):
-        self.users: Dict[str, User] = {}
+        self.user_storage = UserStorage()
         self.sessions: Dict[str, User] = {}
-        
-        # Create default admin account
-        self.create_user('admin', 'admin123', 'admin')
-        print("✓ Default admin created (username: admin, password: admin123)")
     
     def create_user(self, username: str, password: str, role: str, 
-                    company_symbol: str = None) -> User:
+                    company_symbol: str = None) -> bool:
         """Create a new user"""
-        if username in self.users:
-            raise ValueError("Username already exists")
-        
-        user = User(username, password, role, company_symbol)
-        self.users[username] = user
-        return user
+        return self.user_storage.create_user(username, password, role, company_symbol)
     
     def login(self, username: str, password: str) -> Optional[Dict]:
         """Login user and create session"""
-        if username not in self.users:
+        user_data = self.user_storage.verify_user(username, password)
+        
+        if not user_data:
             return None
         
-        user = self.users[username]
-        if not user.verify_password(password):
-            return None
+        # Create user object
+        user = User(
+            user_data['username'],
+            user_data['role'],
+            user_data.get('company_symbol')
+        )
         
         # Create session
         token = user.create_session()
@@ -78,6 +65,11 @@ class AuthManager:
         """Verify session token"""
         return self.sessions.get(token)
     
-    def get_user(self, username: str) -> Optional[User]:
+    def get_user(self, username: str) -> Optional[Dict]:
         """Get user by username"""
-        return self.users.get(username) 
+        return self.user_storage.get_user(username)
+    
+    @property
+    def users(self):
+        """Get all users"""
+        return self.user_storage.get_all_users()

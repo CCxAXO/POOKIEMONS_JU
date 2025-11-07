@@ -1,0 +1,44 @@
+{
+  "admin": {
+    "username": "admin",
+    "password": "YWRtaW4xMjM=",
+    "role": "admin",
+    "company_symbol": null
+  },
+  "owner_gti": {
+    "username": "owner_gti",
+    "password": "b3duZXIxMjM=",
+    "role": "company_owner",
+    "company_symbol": "GTI"
+  },
+  "owner_esc": {
+    "username": "owner_esc",
+    "password": "b3duZXIxMjM=",
+    "role": "company_owner",
+    "company_symbol": "ESC"
+  },
+  "owner_ces": {
+    "username": "owner_ces",
+    "password": "b3duZXIxMjM=",
+    "role": "company_owner",
+    "company_symbol": "CES"
+  },
+  "owner_stx": {
+    "username": "owner_stx",
+    "password": "b3duZXIxMjM=",
+    "role": "company_owner",
+    "company_symbol": "STX"
+  },
+  "trader1": {
+    "username": "trader1",
+    "password": "dHJhZGVyMTIz",
+    "role": "trader",
+    "company_symbol": null
+  },
+  "tester": {
+    "username": "tester",
+    "password": "MTIzNDU2",
+    "role": "trader",
+    "company_symbol": null
+  }
+}

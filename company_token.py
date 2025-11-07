@@ -19,7 +19,7 @@ class CompanyToken:
         self.price = 100.0
         self.price_history = []
         self.emission_history = []
-        self.candlestick_data = []  # OHLC data for charts
+        self.candlestick_data = []  # OHLC data
         self.volume_24h = 0
         self.trades = []
         self.is_verified = False
@@ -30,27 +30,23 @@ class CompanyToken:
         self._generate_historical_data()
     
     def _generate_historical_data(self):
-        """Generate realistic historical price and emission data"""
+        """Generate realistic historical price and emission data with OHLC"""
         base_price = 100.0
         base_emission = self.emission_baseline
         current_time = time()
         
-        # Generate 100 days of historical data with OHLC
+        # Generate 100 days of historical data
         for i in range(100, 0, -1):
             timestamp = current_time - (i * 86400)  # 1 day intervals
             
-            # Generate OHLC (Open, High, Low, Close) for each day
+            # OHLC for candlestick
             open_price = base_price
-            
-            # Random daily change
             daily_change = random.uniform(-0.08, 0.08)  # ±8% daily
             close_price = open_price * (1 + daily_change)
             
-            # High and Low within the range
             high_price = max(open_price, close_price) * random.uniform(1.0, 1.05)
             low_price = min(open_price, close_price) * random.uniform(0.95, 1.0)
             
-            # Volume
             volume = random.uniform(1000, 10000)
             
             self.candlestick_data.append({
@@ -85,23 +81,21 @@ class CompanyToken:
             self.emission_history = self.emission_history[-100:]
     
     def update_price(self, new_price: float):
-        """Update token price and create new candlestick"""
+        """Update token price and candlestick"""
         current_time = time()
         
-        # Update price history
         self.price = new_price
         self.price_history.append((current_time, new_price))
         
         if len(self.price_history) > 100:
             self.price_history = self.price_history[-100:]
         
-        # Update or create new candlestick (daily candles)
+        # Update candlestick
         if self.candlestick_data:
             last_candle = self.candlestick_data[-1]
             time_diff = current_time - last_candle['timestamp']
             
-            # If more than 1 day, create new candle
-            if time_diff > 86400:  # 24 hours
+            if time_diff > 86400:  # New day
                 new_candle = {
                     'timestamp': current_time,
                     'open': last_candle['close'],
@@ -130,7 +124,6 @@ class CompanyToken:
         })
         self.volume_24h += amount * price
         
-        # Update candlestick volume
         if self.candlestick_data:
             self.candlestick_data[-1]['volume'] += amount
     
@@ -151,15 +144,19 @@ class CompanyToken:
             for ts, price in self.price_history[-period:]
         ]
     
-    def get_candlestick_data(self, period: int = 100) -> List[Dict]:
+    def get_candlestick_data(self, period: int = 50) -> List[Dict]:
         """Get candlestick chart data"""
-        return [
-            {
-                **candle,
-                'date': self._format_date(candle['timestamp'])
-            }
-            for candle in self.candlestick_data[-period:]
-        ]
+        data = []
+        for candle in self.candlestick_data[-period:]:
+            data.append({
+                'x': candle['timestamp'] * 1000,  # Convert to milliseconds for Chart.js
+                'o': candle['open'],
+                'h': candle['high'],
+                'l': candle['low'],
+                'c': candle['close'],
+                'volume': candle['volume']
+            })
+        return data
     
     def get_emission_chart_data(self, period: int = 100) -> List[Dict]:
         """Get emission chart data"""

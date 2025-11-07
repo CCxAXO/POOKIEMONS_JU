@@ -1,0 +1,347 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - CarbonCoin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: #e0e6ed;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #1a1f3a 0%, #0f1729 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 30px;
+        }
+
+        .section {
+            background: linear-gradient(135deg, #1a1f3a 0%, #151a30 100%);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 2em;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 10px;
+                color: #8892b0;
+            }
+
+            .form-group input,
+            .form-group select {
+                width: 100%;
+                padding: 15px;
+                background: rgba(255,255,255,0.02);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 10px;
+                color: #e0e6ed;
+                font-size: 1em;
+            }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+            .btn-create:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+            }
+
+        .tokens-list {
+            margin-top: 30px;
+        }
+
+        .token-item {
+            background: rgba(255,255,255,0.02);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .btn-delete {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+            .btn-delete:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 20px rgba(239, 68, 68, 0.4);
+            }
+
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            padding: 20px 30px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            z-index: 2000;
+            display: none;
+        }
+
+            .notification.success {
+                background: linear-gradient(135deg, #10b981, #059669);
+            }
+
+            .notification.error {
+                background: linear-gradient(135deg, #ef4444, #dc2626);
+            }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🔐 Admin Panel</div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </nav>
+
+    <div class="container">
+        <!-- Create Token Section -->
+        <div class="section">
+            <h2 class="section-title">Create New Token</h2>
+
+            <form id="createTokenForm" onsubmit="createToken(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Company Name</label>
+                        <input type="text" id="companyName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Token Symbol</label>
+                        <input type="text" id="symbol" required maxlength="5">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Industry Type</label>
+                        <select id="industryType" required>
+                            <option value="Manufacturing">Manufacturing</option>
+                            <option value="Energy">Energy</option>
+                            <option value="Steel Production">Steel Production</option>
+                            <option value="Textile">Textile</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Transportation">Transportation</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Company Scale</label>
+                        <select id="companyScale" required>
+                            <option value="small">Small</option>
+                            <option value="medium">Medium</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Emission Baseline (tons/month)</label>
+                        <input type="number" id="emissionBaseline" required min="0" step="0.01">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Initial Supply</label>
+                        <input type="number" id="initialSupply" required min="1" value="1000000">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" id="location" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-create">Create Token</button>
+            </form>
+        </div>
+
+        <!-- Manage Tokens Section -->
+        <div class="section">
+            <h2 class="section-title">Manage Tokens</h2>
+            <div class="tokens-list" id="tokensList"></div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Load tokens
+        async function loadTokens() {
+            try {
+                const res = await fetch('/api/tokens');
+                const tokens = await res.json();
+
+                const list = document.getElementById('tokensList');
+                list.innerHTML = tokens.map(token => `
+                        <div class="token-item">
+                            <div>
+                                <div style="font-size: 1.3em; font-weight: bold;">${token.symbol}</div>
+                                <div style="color: #8892b0; margin-top: 5px;">${token.company_name}</div>
+                                <div style="color: #8892b0; font-size: 0.9em; margin-top: 5px;">
+                                    Industry: ${token.industry_type} | Scale: ${token.company_scale}
+                                </div>
+                            </div>
+                            <button class="btn-delete" onclick="deleteToken('${token.symbol}')">Delete</button>
+                        </div>
+                    `).join('');
+            } catch (error) {
+                console.error('Error loading tokens:', error);
+            }
+        }
+
+        // Create token
+        async function createToken(e) {
+            e.preventDefault();
+
+            const data = {
+                company_name: document.getElementById('companyName').value,
+                symbol: document.getElementById('symbol').value.toUpperCase(),
+                industry_type: document.getElementById('industryType').value,
+                company_scale: document.getElementById('companyScale').value,
+                emission_baseline: parseFloat(document.getElementById('emissionBaseline').value),
+                initial_supply: parseFloat(document.getElementById('initialSupply').value),
+                location: document.getElementById('location').value
+            };
+
+            try {
+                const res = await fetch('/api/admin/create_token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    showNotification('✓ Token created successfully!', 'success');
+                    document.getElementById('createTokenForm').reset();
+                    loadTokens();
+                } else {
+                    showNotification(result.error, 'error');
+                }
+            } catch (error) {
+                showNotification('Error creating token: ' + error.message, 'error');
+            }
+        }
+
+        // Delete token
+        async function deleteToken(symbol) {
+            if (!confirm(`Are you sure you want to delete token ${symbol}?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/admin/delete_token/${symbol}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    showNotification('✓ Token deleted successfully!', 'success');
+                    loadTokens();
+                } else {
+                    showNotification(result.error, 'error');
+                }
+            } catch (error) {
+                showNotification('Error deleting token: ' + error.message, 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 4000);
+        }
+
+        // Logout
+        async function logout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/login';
+        }
+
+        // Load tokens on page load
+        loadTokens();
+    </script>
+</body>
+</html>
