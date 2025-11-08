@@ -12,443 +12,774 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             overflow-x: hidden;
+            background: #0a0e27;
+            color: #fff;
         }
 
-        /* Animated gradient background */
+        /* Animated mesh gradient background */
         .hero {
-            height: 100vh;
-            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            text-align: center;
+            min-height: 100vh;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%);
+        }
+
+        .gradient-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
         }
 
-        @keyframes gradientShift {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
+        .gradient-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
         }
 
-        /* Floating particles */
-        .particle {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            animation: float 20s infinite;
+        .blob-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, #667eea 0%, transparent 70%);
+            top: -200px;
+            left: -200px;
+            animation-delay: 0s;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #10b981 0%, transparent 70%);
+            top: 50%;
+            right: -150px;
+            animation-delay: 5s;
+        }
+
+        .blob-3 {
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, #764ba2 0%, transparent 70%);
+            bottom: -250px;
+            left: 30%;
+            animation-delay: 10s;
         }
 
         @keyframes float {
             0%, 100% {
-                transform: translateY(0) rotate(0deg);
+                transform: translate(0, 0) scale(1);
             }
-
-            50% {
-                transform: translateY(-100px) rotate(180deg);
+            33% {
+                transform: translate(100px, -100px) scale(1.1);
+            }
+            66% {
+                transform: translate(-50px, 100px) scale(0.9);
             }
         }
 
-        .particle:nth-child(1) {
-            width: 80px;
-            height: 80px;
-            left: 10%;
-            animation-delay: 0s;
+        /* Floating particles */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
         }
 
-        .particle:nth-child(2) {
-            width: 60px;
-            height: 60px;
-            left: 80%;
-            animation-delay: 2s;
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            pointer-events: none;
         }
 
-        .particle:nth-child(3) {
-            width: 100px;
-            height: 100px;
-            left: 50%;
-            animation-delay: 4s;
+        .particle:nth-child(1) { width: 4px; height: 4px; left: 10%; animation: drift 15s infinite; }
+        .particle:nth-child(2) { width: 6px; height: 6px; left: 25%; animation: drift 18s infinite 2s; }
+        .particle:nth-child(3) { width: 3px; height: 3px; left: 40%; animation: drift 20s infinite 4s; }
+        .particle:nth-child(4) { width: 5px; height: 5px; left: 60%; animation: drift 17s infinite 1s; }
+        .particle:nth-child(5) { width: 4px; height: 4px; left: 75%; animation: drift 19s infinite 3s; }
+        .particle:nth-child(6) { width: 6px; height: 6px; left: 85%; animation: drift 16s infinite 5s; }
+
+        @keyframes drift {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
         }
 
-        .particle:nth-child(4) {
-            width: 40px;
-            height: 40px;
-            left: 30%;
-            animation-delay: 6s;
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+            background: rgba(10, 14, 39, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .particle:nth-child(5) {
-            width: 70px;
-            height: 70px;
-            left: 70%;
-            animation-delay: 8s;
+        .logo {
+            font-size: 1.8em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
         }
 
+        .nav-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        /* Hero Content */
         .hero-content {
+            position: relative;
             z-index: 10;
-            max-width: 800px;
-            padding: 0 20px;
+            text-align: center;
+            max-width: 1000px;
+            padding: 0 30px;
+            margin-top: 80px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 10px 25px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 50px;
+            color: #10b981;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.8s;
         }
 
         .hero h1 {
-            font-size: 4em;
-            font-weight: bold;
-            margin-bottom: 20px;
-            animation: fadeInUp 1s;
+            font-size: 5em;
+            font-weight: 900;
+            margin-bottom: 25px;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            animation: fadeInUp 0.8s 0.2s backwards;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, #667eea 50%, #10b981 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        .hero p {
+            font-size: 1.4em;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 40px;
+            line-height: 1.6;
+            animation: fadeInUp 0.8s 0.4s backwards;
         }
 
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(50px);
+                transform: translateY(30px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
 
-        .hero p {
-            font-size: 1.5em;
-            margin-bottom: 40px;
-            animation: fadeInUp 1s 0.3s backwards;
-        }
-
         .cta-buttons {
             display: flex;
             gap: 20px;
             justify-content: center;
-            animation: fadeInUp 1s 0.6s backwards;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s 0.6s backwards;
         }
 
         .btn {
             padding: 18px 40px;
-            font-size: 1.2em;
-            border: none;
+            font-size: 1.1em;
+            font-weight: 700;
             border-radius: 50px;
             cursor: pointer;
-            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
             text-decoration: none;
             display: inline-block;
-            transition: all 0.3s;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
         .btn-primary {
-            background: white;
-            color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         }
 
-            .btn-primary:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-            }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
 
         .btn-secondary {
-            background: transparent;
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            border: 3px solid white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
         }
 
-            .btn-secondary:hover {
-                background: white;
-                color: #667eea;
-                transform: translateY(-5px);
-            }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-3px);
+        }
+
+        /* Glassmorphism Stats */
+        .hero-stats {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 80px;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s 0.8s backwards;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px 40px;
+            min-width: 180px;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-5px);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.95em;
+            font-weight: 500;
+        }
 
         /* Features Section */
         .features {
-            padding: 100px 20px;
-            background: #f9fafb;
+            padding: 150px 50px;
+            position: relative;
+            background: linear-gradient(180deg, #0a0e27 0%, #1a1f3a 100%);
         }
 
-            .features h2 {
-                text-align: center;
-                font-size: 3em;
-                color: #333;
-                margin-bottom: 60px;
-            }
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50px;
+            color: #667eea;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-title {
+            font-size: 3.5em;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .section-subtitle {
+            font-size: 1.3em;
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 700px;
+            margin: 0 auto;
+        }
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
-            max-width: 1200px;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
         .feature-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 25px;
             padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
 
-            .feature-card:hover {
-                transform: translateY(-10px);
-                box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-            }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #10b981);
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-10px);
+        }
 
         .feature-icon {
-            font-size: 4em;
-            margin-bottom: 20px;
+            font-size: 3em;
+            margin-bottom: 25px;
+            display: inline-block;
+            filter: drop-shadow(0 0 20px currentColor);
+            animation: float-icon 3s infinite ease-in-out;
+        }
+
+        @keyframes float-icon {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
         .feature-card h3 {
-            font-size: 1.8em;
-            color: #667eea;
+            font-size: 1.6em;
             margin-bottom: 15px;
+            font-weight: 700;
         }
 
         .feature-card p {
-            color: #666;
-            font-size: 1.1em;
-            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.7;
+            font-size: 1.05em;
         }
 
-        /* Stats Section */
-        .stats {
-            padding: 80px 20px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+        /* How It Works */
+        .how-it-works {
+            padding: 150px 50px;
+            background: linear-gradient(180deg, #1a1f3a 0%, #0a0e27 100%);
+            position: relative;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 40px;
+        .steps-container {
             max-width: 1200px;
             margin: 0 auto;
-            text-align: center;
-        }
-
-        .stat-item h3 {
-            font-size: 3em;
-            margin-bottom: 10px;
-            animation: countUp 2s;
-        }
-
-        .stat-item p {
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
-
-        /* How it Works */
-        .how-it-works {
-            padding: 100px 20px;
-            background: white;
-        }
-
-            .how-it-works h2 {
-                text-align: center;
-                font-size: 3em;
-                color: #333;
-                margin-bottom: 60px;
-            }
-
-        .steps {
-            max-width: 1000px;
-            margin: 0 auto;
+            position: relative;
         }
 
         .step {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            margin-bottom: 100px;
             align-items: center;
-            gap: 40px;
-            margin-bottom: 60px;
         }
 
-            .step:nth-child(even) {
-                flex-direction: row-reverse;
-            }
+        .step:nth-child(even) {
+            direction: rtl;
+        }
+
+        .step:nth-child(even) > * {
+            direction: ltr;
+        }
+
+        .step-visual {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 30px;
+            padding: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-visual::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
 
         .step-number {
-            font-size: 5em;
-            font-weight: bold;
-            color: #667eea;
-            opacity: 0.2;
-            min-width: 100px;
+            font-size: 12em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0.3;
+            position: relative;
+            z-index: 1;
         }
 
         .step-content h3 {
-            font-size: 2em;
-            color: #667eea;
-            margin-bottom: 15px;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .step-content p {
             font-size: 1.2em;
-            color: #666;
-            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.8;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 150px 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            top: -250px;
+            right: -250px;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        .cta-content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-content h2 {
+            font-size: 4em;
+            font-weight: 900;
+            margin-bottom: 30px;
+            letter-spacing: -1px;
+        }
+
+        .cta-content p {
+            font-size: 1.4em;
+            margin-bottom: 50px;
+            opacity: 0.95;
         }
 
         /* Footer */
         footer {
-            padding: 40px 20px;
-            background: #1f2937;
-            color: white;
-            text-align: center;
+            padding: 60px 50px;
+            background: #0a0e27;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-            footer p {
-                font-size: 1.1em;
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .footer-logo {
+            font-size: 1.5em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .footer-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.95em;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero h1 { font-size: 3.5em; }
+            .steps-container .step {
+                grid-template-columns: 1fr;
+                gap: 40px;
             }
+            .step:nth-child(even) { direction: ltr; }
+        }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 15px 25px; }
+            .hero h1 { font-size: 2.5em; }
+            .hero p { font-size: 1.1em; }
+            .features { padding: 80px 25px; }
+            .how-it-works { padding: 80px 25px; }
+            .section-title { font-size: 2.5em; }
+            .features-grid { grid-template-columns: 1fr; }
+            .cta-section { padding: 80px 25px; }
+            .cta-content h2 { font-size: 2.5em; }
+        }
 
         /* Scroll animations */
         .fade-in {
             opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s;
+            transform: translateY(50px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-            .fade-in.visible {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo">🌍 CarbonCoin</div>
+        <a href="/login"><button class="nav-btn">Launch App</button></a>
+    </nav>
+
     <!-- Hero Section -->
     <section class="hero">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
+        <div class="gradient-bg">
+            <div class="gradient-blob blob-1"></div>
+            <div class="gradient-blob blob-2"></div>
+            <div class="gradient-blob blob-3"></div>
+        </div>
+        
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
 
         <div class="hero-content">
-            <h1>🌍 CarbonCoin Exchange</h1>
-            <p>Trade Green, Earn Clean. The world's first emission-based cryptocurrency platform.</p>
+            <div class="hero-badge">🚀 The Future of Carbon Trading</div>
+            <h1>
+                <span class="gradient-text">Trade Green.</span><br>
+                Earn Clean.
+            </h1>
+            <p>The world's first emission-based cryptocurrency platform. Real companies. Real emissions. Real profits.</p>
+            
             <div class="cta-buttons">
-                <a href="/login" class="btn btn-primary">Start Trading</a>
+                <a href="/login" class="btn btn-primary">Start Trading Now</a>
                 <a href="#features" class="btn btn-secondary">Learn More</a>
+            </div>
+
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="tokenCount">4</div>
+                    <div class="stat-label">Active Tokens</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">$2.5M</div>
+                    <div class="stat-label">Market Cap</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">500T</div>
+                    <div class="stat-label">CO₂ Reduced</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">100+</div>
+                    <div class="stat-label">Active Traders</div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
     <section class="features" id="features">
-        <h2>Why CarbonCoin?</h2>
+        <div class="section-header fade-in">
+            <div class="section-badge">Features</div>
+            <h2 class="section-title">Why Choose CarbonCoin?</h2>
+            <p class="section-subtitle">Revolutionary emission-based trading with real-time data and verified companies</p>
+        </div>
+
         <div class="features-grid">
             <div class="feature-card fade-in">
                 <div class="feature-icon">🌱</div>
-                <h3>Emission-Based</h3>
-                <p>Token prices tied directly to real-time CO2 emissions. Lower emissions = Higher value.</p>
+                <h3>Emission-Based Pricing</h3>
+                <p>Token prices tied directly to real-time CO₂ emissions. Lower emissions mean higher token value. Simple economics for a better planet.</p>
             </div>
 
             <div class="feature-card fade-in">
                 <div class="feature-icon">📊</div>
-                <h3>Real-Time Data</h3>
-                <p>Live IoT sensors track emissions 24/7. Complete transparency and verifiable data.</p>
+                <h3>Real-Time IoT Data</h3>
+                <p>Live sensors track emissions 24/7 at industrial sites. Complete transparency with verifiable, tamper-proof data streams.</p>
             </div>
 
             <div class="feature-card fade-in">
                 <div class="feature-icon">🔒</div>
                 <h3>Blockchain Verified</h3>
-                <p>All companies verified and registered. No scams, no rugpulls. Trade with confidence.</p>
+                <p>All companies are verified and registered. No scams, no rugpulls. Trade with confidence on our secure platform.</p>
             </div>
 
             <div class="feature-card fade-in">
                 <div class="feature-icon">💰</div>
                 <h3>Profit & Impact</h3>
-                <p>Make money while incentivizing companies to reduce their carbon footprint.</p>
+                <p>Make money while incentivizing companies to reduce their carbon footprint. Profitable trading that changes the world.</p>
             </div>
 
             <div class="feature-card fade-in">
                 <div class="feature-icon">⚡</div>
                 <h3>Instant Trading</h3>
-                <p>Buy and sell tokens instantly with our advanced trading platform. 1% fee on all trades.</p>
+                <p>Buy and sell tokens instantly with our advanced platform. Lightning-fast execution with only 1% trading fees.</p>
             </div>
 
             <div class="feature-card fade-in">
                 <div class="feature-icon">📈</div>
-                <h3>Portfolio Tracking</h3>
-                <p>Monitor your investments with real-time charts and comprehensive analytics.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="stats">
-        <div class="stats-grid">
-            <div class="stat-item">
-                <h3 id="tokenCount">4</h3>
-                <p>Active Tokens</p>
-            </div>
-            <div class="stat-item">
-                <h3 id="userCount">100+</h3>
-                <p>Active Traders</p>
-            </div>
-            <div class="stat-item">
-                <h3 id="marketCap">$2.5M</h3>
-                <p>Market Cap</p>
-            </div>
-            <div class="stat-item">
-                <h3 id="co2Reduced">500T</h3>
-                <p>CO₂ Reduced</p>
+                <h3>Advanced Analytics</h3>
+                <p>Monitor investments with real-time candlestick charts, emission tracking, and comprehensive portfolio analytics.</p>
             </div>
         </div>
     </section>
 
     <!-- How It Works -->
     <section class="how-it-works">
-        <h2>How It Works</h2>
-        <div class="steps">
+        <div class="section-header fade-in">
+            <div class="section-badge">Process</div>
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-subtitle">From company registration to your profits in four simple steps</p>
+        </div>
+
+        <div class="steps-container">
             <div class="step fade-in">
-                <div class="step-number">1</div>
+                <div class="step-visual">
+                    <div class="step-number">1</div>
+                </div>
                 <div class="step-content">
                     <h3>Companies Register</h3>
-                    <p>Verified companies register on the platform and receive CO2 emission guidelines based on their industry and scale.</p>
+                    <p>Verified companies join the platform and receive CO₂ emission guidelines based on their industry sector, operational scale, and historical data. Each company gets a unique token.</p>
                 </div>
             </div>
 
             <div class="step fade-in">
-                <div class="step-number">2</div>
+                <div class="step-visual">
+                    <div class="step-number">2</div>
+                </div>
                 <div class="step-content">
-                    <h3>IoT Sensors Track Emissions</h3>
-                    <p>Real-time IoT devices monitor actual CO2 emissions at industrial sites, ensuring complete transparency.</p>
+                    <h3>IoT Sensors Track</h3>
+                    <p>Real-time IoT devices monitor actual CO₂ emissions at industrial facilities. Data is collected every hour and verified through blockchain technology for complete transparency.</p>
                 </div>
             </div>
 
             <div class="step fade-in">
-                <div class="step-number">3</div>
+                <div class="step-visual">
+                    <div class="step-number">3</div>
+                </div>
                 <div class="step-content">
-                    <h3>Prices Adjust Automatically</h3>
-                    <p>Token prices rise when emissions are below baseline (green candle) and fall when above (red candle).</p>
+                    <h3>Prices Adjust</h3>
+                    <p>Token prices rise when emissions fall below baseline (green candle) and decrease when emissions exceed targets (red candle). The market rewards eco-friendly operations.</p>
                 </div>
             </div>
 
             <div class="step fade-in">
-                <div class="step-number">4</div>
+                <div class="step-visual">
+                    <div class="step-number">4</div>
+                </div>
                 <div class="step-content">
-                    <h3>You Trade & Profit</h3>
-                    <p>Buy tokens from eco-friendly companies and watch your portfolio grow as they maintain low emissions!</p>
+                    <h3>You Profit</h3>
+                    <p>Buy tokens from companies with strong environmental commitments and watch your portfolio grow as they maintain low emissions. Trading that makes a difference.</p>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>Ready to Make an Impact?</h2>
+            <p>Join thousands of traders who are already profiting while saving the planet</p>
+            <a href="/login" class="btn btn-primary" style="background: white; color: #667eea; font-size: 1.2em; padding: 20px 50px;">
+                Start Trading Today
+            </a>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer>
-        <p>© 2024 CarbonCoin Exchange. Trade responsibly. Save the planet. 🌍</p>
+        <div class="footer-content">
+            <div class="footer-logo">🌍 CarbonCoin</div>
+            <div class="footer-text">© 2024 CarbonCoin Exchange. Trade responsibly. Save the planet.</div>
+        </div>
     </footer>
 
     <script>
@@ -475,17 +806,24 @@
             try {
                 const res = await fetch('/api/stats');
                 const stats = await res.json();
-
                 document.getElementById('tokenCount').textContent = stats.total_tokens;
-                document.getElementById('userCount').textContent = stats.total_users + '+';
-                document.getElementById('marketCap').textContent =
-                    '$' + (stats.total_market_cap / 1000000).toFixed(1) + 'M';
             } catch (error) {
                 console.error('Error loading stats:', error);
             }
         }
 
         loadStats();
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
     </script>
 </body>
 </html>

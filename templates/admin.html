@@ -12,185 +12,411 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #0a0e27;
             color: #e0e6ed;
+            min-height: 100vh;
         }
 
+        /* Animated background */
+        .bg-gradient {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .gradient-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            animation: float 25s infinite ease-in-out;
+        }
+
+        .blob-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, #667eea 0%, transparent 70%);
+            top: -200px;
+            left: -200px;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #ef4444 0%, transparent 70%);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: 7s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(100px, -100px) rotate(120deg); }
+            66% { transform: translate(-50px, 100px) rotate(240deg); }
+        }
+
+        /* Navbar */
         .navbar {
-            background: linear-gradient(135deg, #1a1f3a 0%, #0f1729 100%);
-            padding: 15px 30px;
+            position: relative;
+            z-index: 100;
+            background: rgba(26, 31, 58, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 20px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
 
         .logo {
-            font-size: 1.8em;
-            font-weight: bold;
+            font-size: 2em;
+            font-weight: 900;
             background: linear-gradient(135deg, #ef4444, #dc2626);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .logout-btn {
-            padding: 10px 20px;
+            padding: 12px 28px;
             background: linear-gradient(135deg, #ef4444, #dc2626);
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             color: white;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 700;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
         }
 
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(239, 68, 68, 0.6);
+        }
+
+        /* Container */
         .container {
-            max-width: 1400px;
-            margin: 30px auto;
-            padding: 0 30px;
+            position: relative;
+            z-index: 10;
+            max-width: 1500px;
+            margin: 40px auto;
+            padding: 0 40px;
         }
 
+        /* Section Cards */
         .section {
-            background: linear-gradient(135deg, #1a1f3a 0%, #151a30 100%);
-            padding: 30px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.05);
-            margin-bottom: 30px;
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+
+        .section:hover {
+            border-color: rgba(102, 126, 234, 0.3);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
         }
 
         .section-title {
-            font-size: 2em;
-            margin-bottom: 25px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #10b981);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
+        /* Form Styling */
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            position: relative;
         }
 
-            .form-group label {
-                display: block;
-                margin-bottom: 10px;
-                color: #8892b0;
-            }
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #a0aec0;
+            font-weight: 600;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-            .form-group input,
-            .form-group select {
-                width: 100%;
-                padding: 15px;
-                background: rgba(255,255,255,0.02);
-                border: 1px solid rgba(255,255,255,0.1);
-                border-radius: 10px;
-                color: #e0e6ed;
-                font-size: 1em;
-            }
-
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #e0e6ed;
             font-size: 1em;
-            font-weight: bold;
+            transition: all 0.3s;
+            font-family: inherit;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        .form-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23e0e6ed' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 45px;
+            cursor: pointer;
+        }
+
+        .form-group select option {
+            background: #1a1f3a;
+            color: #e0e6ed;
+            padding: 12px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 16px 36px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05em;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .btn-create {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
         }
 
-            .btn-create:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
-            }
+        .btn-create:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.6);
+        }
 
+        /* Token List */
         .tokens-list {
-            margin-top: 30px;
+            display: grid;
+            gap: 20px;
         }
 
         .token-item {
-            background: rgba(255,255,255,0.02);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(10px);
+            padding: 25px 30px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s;
+        }
+
+        .token-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateX(5px);
+        }
+
+        .token-info {
+            flex: 1;
+        }
+
+        .token-symbol {
+            font-size: 1.6em;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #667eea, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .token-company {
+            color: #a0aec0;
+            font-size: 1.05em;
+            margin-bottom: 8px;
+        }
+
+        .token-meta {
+            color: #718096;
+            font-size: 0.9em;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .meta-badge {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 4px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
         }
 
         .btn-delete {
-            padding: 10px 20px;
+            padding: 12px 24px;
             background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 700;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
         }
 
-            .btn-delete:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 5px 20px rgba(239, 68, 68, 0.4);
-            }
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(239, 68, 68, 0.5);
+        }
 
+        /* Notification */
         .notification {
             position: fixed;
             top: 100px;
-            right: 30px;
+            right: 40px;
             padding: 20px 30px;
-            border-radius: 12px;
+            border-radius: 16px;
             color: white;
-            font-weight: bold;
+            font-weight: 700;
             z-index: 2000;
             display: none;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            animation: slideIn 0.3s;
         }
 
-            .notification.success {
-                background: linear-gradient(135deg, #10b981, #059669);
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
             }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
 
-            .notification.error {
-                background: linear-gradient(135deg, #ef4444, #dc2626);
+        .notification.success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95));
+            border: 1px solid rgba(16, 185, 129, 0.5);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95));
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+
+        /* Loading state */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
             }
+            .container {
+                padding: 0 20px;
+            }
+            .section {
+                padding: 25px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .token-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="bg-gradient">
+        <div class="gradient-blob blob-1"></div>
+        <div class="gradient-blob blob-2"></div>
+    </div>
+
     <nav class="navbar">
-        <div class="logo">🔐 Admin Panel</div>
+        <div class="logo">
+            🔐 Admin Panel
+        </div>
         <button class="logout-btn" onclick="logout()">Logout</button>
     </nav>
 
     <div class="container">
         <!-- Create Token Section -->
         <div class="section">
-            <h2 class="section-title">Create New Token</h2>
+            <h2 class="section-title">
+                <span>✨</span> Create New Token
+            </h2>
 
             <form id="createTokenForm" onsubmit="createToken(event)">
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Company Name</label>
-                        <input type="text" id="companyName" required>
+                        <input type="text" id="companyName" required placeholder="Enter company name">
                     </div>
 
                     <div class="form-group">
                         <label>Token Symbol</label>
-                        <input type="text" id="symbol" required maxlength="5">
+                        <input type="text" id="symbol" required maxlength="5" placeholder="e.g. CARB">
                     </div>
 
                     <div class="form-group">
                         <label>Industry Type</label>
                         <select id="industryType" required>
+                            <option value="">Select industry...</option>
                             <option value="Manufacturing">Manufacturing</option>
                             <option value="Energy">Energy</option>
                             <option value="Steel Production">Steel Production</option>
@@ -203,6 +429,7 @@
                     <div class="form-group">
                         <label>Company Scale</label>
                         <select id="companyScale" required>
+                            <option value="">Select scale...</option>
                             <option value="small">Small</option>
                             <option value="medium">Medium</option>
                             <option value="large">Large</option>
@@ -211,17 +438,17 @@
 
                     <div class="form-group">
                         <label>Emission Baseline (tons/month)</label>
-                        <input type="number" id="emissionBaseline" required min="0" step="0.01">
+                        <input type="number" id="emissionBaseline" required min="0" step="0.01" placeholder="0.00">
                     </div>
 
                     <div class="form-group">
                         <label>Initial Supply</label>
-                        <input type="number" id="initialSupply" required min="1" value="1000000">
+                        <input type="number" id="initialSupply" required min="1" value="1000000" placeholder="1000000">
                     </div>
 
                     <div class="form-group">
                         <label>Location</label>
-                        <input type="text" id="location" required>
+                        <input type="text" id="location" required placeholder="City, Country">
                     </div>
                 </div>
 
@@ -231,39 +458,58 @@
 
         <!-- Manage Tokens Section -->
         <div class="section">
-            <h2 class="section-title">Manage Tokens</h2>
-            <div class="tokens-list" id="tokensList"></div>
+            <h2 class="section-title">
+                <span>📊</span> Manage Tokens
+            </h2>
+            <div class="tokens-list" id="tokensList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">⏳</div>
+                    <p>Loading tokens...</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <div id="notification" class="notification"></div>
 
     <script>
-        // Load tokens
         async function loadTokens() {
             try {
                 const res = await fetch('/api/tokens');
                 const tokens = await res.json();
 
                 const list = document.getElementById('tokensList');
-                list.innerHTML = tokens.map(token => `
-                        <div class="token-item">
-                            <div>
-                                <div style="font-size: 1.3em; font-weight: bold;">${token.symbol}</div>
-                                <div style="color: #8892b0; margin-top: 5px;">${token.company_name}</div>
-                                <div style="color: #8892b0; font-size: 0.9em; margin-top: 5px;">
-                                    Industry: ${token.industry_type} | Scale: ${token.company_scale}
-                                </div>
-                            </div>
-                            <button class="btn-delete" onclick="deleteToken('${token.symbol}')">Delete</button>
+                
+                if (tokens.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>No tokens created yet. Create your first token above!</p>
                         </div>
-                    `).join('');
+                    `;
+                    return;
+                }
+
+                list.innerHTML = tokens.map(token => `
+                    <div class="token-item">
+                        <div class="token-info">
+                            <div class="token-symbol">${token.symbol}</div>
+                            <div class="token-company">${token.company_name}</div>
+                            <div class="token-meta">
+                                <span class="meta-badge">🏭 ${token.industry_type}</span>
+                                <span class="meta-badge">📏 ${token.company_scale}</span>
+                                <span class="meta-badge">📍 ${token.location || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <button class="btn-delete" onclick="deleteToken('${token.symbol}')">Delete</button>
+                    </div>
+                `).join('');
             } catch (error) {
                 console.error('Error loading tokens:', error);
+                showNotification('Failed to load tokens', 'error');
             }
         }
 
-        // Create token
         async function createToken(e) {
             e.preventDefault();
 
@@ -277,6 +523,9 @@
                 location: document.getElementById('location').value
             };
 
+            const form = document.getElementById('createTokenForm');
+            form.classList.add('loading');
+
             try {
                 const res = await fetch('/api/admin/create_token', {
                     method: 'POST',
@@ -287,20 +536,21 @@
                 const result = await res.json();
 
                 if (result.success) {
-                    showNotification('✓ Token created successfully!', 'success');
-                    document.getElementById('createTokenForm').reset();
+                    showNotification(`✓ Token ${data.symbol} created successfully!`, 'success');
+                    form.reset();
                     loadTokens();
                 } else {
-                    showNotification(result.error, 'error');
+                    showNotification(result.error || 'Failed to create token', 'error');
                 }
             } catch (error) {
-                showNotification('Error creating token: ' + error.message, 'error');
+                showNotification('Error: ' + error.message, 'error');
+            } finally {
+                form.classList.remove('loading');
             }
         }
 
-        // Delete token
         async function deleteToken(symbol) {
-            if (!confirm(`Are you sure you want to delete token ${symbol}?`)) {
+            if (!confirm(`⚠️ Are you sure you want to delete token ${symbol}?\n\nThis action cannot be undone.`)) {
                 return;
             }
 
@@ -312,17 +562,16 @@
                 const result = await res.json();
 
                 if (result.success) {
-                    showNotification('✓ Token deleted successfully!', 'success');
+                    showNotification(`✓ Token ${symbol} deleted successfully!`, 'success');
                     loadTokens();
                 } else {
-                    showNotification(result.error, 'error');
+                    showNotification(result.error || 'Failed to delete token', 'error');
                 }
             } catch (error) {
-                showNotification('Error deleting token: ' + error.message, 'error');
+                showNotification('Error: ' + error.message, 'error');
             }
         }
 
-        // Show notification
         function showNotification(message, type) {
             const notification = document.getElementById('notification');
             notification.textContent = message;
@@ -334,13 +583,11 @@
             }, 4000);
         }
 
-        // Logout
         async function logout() {
             await fetch('/api/logout', { method: 'POST' });
             window.location.href = '/login';
         }
 
-        // Load tokens on page load
         loadTokens();
     </script>
 </body>

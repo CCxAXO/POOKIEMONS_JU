@@ -3236,10 +3236,10 @@
           "high": 82.79,
           "low": 82.79,
           "close": 82.79,
-          "volume": 10.0
+          "volume": 20.0
         }
       ],
-      "volume_24h": 827.9000000000001,
+      "volume_24h": 1655.8000000000002,
       "is_verified": true,
       "created_at": 1762534480.725677,
       "owner_address": "WALLET_ESC"
@@ -6489,5 +6489,5 @@
       "owner_address": "WALLET_STX"
     }
   },
-  "last_update": 1762534555.5413818
+  "last_update": 1762574555.629263
 }
